@@ -12,7 +12,7 @@ find_package(CUDA REQUIRED)
 
 # Specify source files
 set(SRC_FILES
-    source/test.cu
+    source/main.cu
 )
 
 set(CMAKE_CUDA_FLAGS_DEBUG " -Xcompiler -O3 -Xcompiler -Wall")

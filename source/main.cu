@@ -37,19 +37,21 @@ void readDumpFile(const std::string& filename, std::vector<int>& vector1, std::v
   file.close();
 }
 
-__global__ void test_kernel() {
+__global__ void csr_graph(const int* adjp_gpu, const int* adjncy_gpu, int N, int M) {
 
-  int num = threadIdx.x + 1; // a number between 1 to 8  
-  int result = 1; // factorial result of the number
-
-  for(int i=1; i<=num; i++) {
-    result = result * i;
+  /*
+  // check csr
+  printf("adjp_gpu = [");
+  for(size_t i=0; i<N; i++) {
+    printf("%d ", adjp_gpu[i]);
   }
-  std::printf("%d!=%d\n", num, result);
-   
-}
-
-__global__ void build_graph() {
+  printf("]\n");
+  printf("adjncy_gpu = [");
+  for(size_t i=0; i<M; i++) {
+    printf("%d ", adjncy_gpu[i]);
+  }
+  printf("]\n");
+  */
 
 }
 
@@ -59,27 +61,39 @@ int main() {
    * read graph information
    */
 
-  std::vector<int> _adjp, _adjncy;
+  std::vector<int> adjp, adjncy;
   std::string csr_path = "../../csr_data/csr.dmp"; // Change this to your file path
+  readDumpFile(csr_path, adjp, adjncy); 
 
-  readDumpFile(csr_path, _adjp, _adjncy); 
-
+  /*
   // check csr
-  std::cerr << "_adjp = [";
-  for(auto id : _adjp) {
+  std::cerr << "adjp = [";
+  for(auto id : adjp) {
     std::cerr << id << " ";
   }
   std::cerr << "]\n";
-  std::cerr << "_adjncy = [";
-  for(auto id : _adjncy) {
+  std::cerr << "adjncy = [";
+  for(auto id : adjncy) {
     std::cerr << id << " ";
   }
   std::cerr << "]\n";
+  */
+
+  /*
+   * transfer csr data to gpu
+   */
+
+  int* adjp_gpu; 
+  int* adjncy_gpu; 
+  cudaMalloc(&adjp_gpu, sizeof(int)*adjp.size());
+  cudaMalloc(&adjncy_gpu, sizeof(int)*adjncy.size());
+  cudaMemcpy(adjp_gpu, adjp.data(), sizeof(int)*adjp.size(), cudaMemcpyDefault);
+  cudaMemcpy(adjncy_gpu, adjncy.data(), sizeof(int)*adjncy.size(), cudaMemcpyDefault);
 
   unsigned num_block = 1; 	
-  unsigned num_threads = 512;
-
-  test_kernel<<<num_block, num_threads>>>();
+  unsigned num_threads = 1;
+ 
+  csr_graph<<<num_block, num_threads>>>(adjp_gpu, adjncy_gpu, adjp.size(), adjncy.size()); 
 
   cudaDeviceSynchronize();
 
